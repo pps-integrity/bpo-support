@@ -1,0 +1,2509 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BPO Support Form Switcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+          colors: {
+            ink: '#172033',
+            muted: '#667085',
+            mist: '#eef3ff',
+            ocean: '#3454d1',
+            violet: '#7c3aed',
+            emerald: '#059669'
+          },
+          boxShadow: {
+            soft: '0 18px 60px rgba(16, 24, 40, 0.14)',
+            panel: '0 12px 34px rgba(52, 84, 209, 0.14)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .mesh-bg {
+      background:
+        radial-gradient(circle at 12% 18%, rgba(124, 58, 237, 0.20), transparent 27rem),
+        radial-gradient(circle at 88% 12%, rgba(5, 150, 105, 0.16), transparent 25rem),
+        radial-gradient(circle at 50% 90%, rgba(52, 84, 209, 0.18), transparent 32rem),
+        linear-gradient(135deg, #f7f9ff 0%, #eef3ff 42%, #f8fbff 100%);
+    }
+    .page-main { width: 100%; max-width: 96rem; margin: 0 auto; padding: clamp(0.35rem, 1vw, 0.85rem); }
+    .app-shell { min-height: calc(100dvh - clamp(0.7rem, 2vw, 1.7rem)); display: flex; flex-direction: column; }
+    .app-body { flex: 1; display: flex; flex-direction: column; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .topbar-title { min-width: 0; flex: 1; }
+    .topbar-actions { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+    .topbar-badge { margin-left: auto; }
+    .settings-wrap { position: relative; }
+    .settings-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      box-shadow: none;
+      color: #172033;
+      line-height: 0;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+    .settings-button:hover { transform: translateY(-1px); opacity: 0.78; }
+    .settings-button-icon { width: 1.1rem; height: 1.1rem; display: block; }
+    .settings-button-label { display: none; }
+    .settings-panel {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      z-index: 50;
+      min-width: 16rem;
+      padding: 0.9rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+      backdrop-filter: blur(18px);
+    }
+    .settings-stack { display: grid; gap: 0.9rem; }
+    .settings-row { display: grid; gap: 0.45rem; }
+    .settings-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #344054;
+    }
+    .settings-select,
+    .theme-toggle {
+      width: 100%;
+      border-radius: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(248, 250, 252, 0.95);
+      color: #172033;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.7rem 0.85rem;
+    }
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); border-color: rgba(52, 84, 209, 0.35); }
+    .selector-grid { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+    .selector-btn { width: 100%; min-width: 0; }
+    .selector-icon-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      flex-shrink: 0;
+      border-radius: 0.85rem;
+      background: linear-gradient(145deg, #e6ebf2 0%, #dce3ec 100%);
+      color: #183a61;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    .selector-btn[aria-selected="true"] {
+      box-shadow: 0 0 0 2px rgba(52, 84, 209, 0.22), 0 10px 24px rgba(52, 84, 209, 0.14);
+      border-color: rgba(52, 84, 209, 0.42);
+    }
+    .active-tab { color: #172033; background: rgba(255, 255, 255, 0.96); border: 1px solid rgba(52, 84, 209, 0.28); box-shadow: 0 10px 24px rgba(52, 84, 209, 0.14); }
+    .inactive-tab { color: #475467; background: rgba(255, 255, 255, 0.64); border: 1px solid rgba(148, 163, 184, 0.28); }
+    .frame-wrap { height: clamp(30rem, calc(100dvh - 18rem), 58rem); min-height: 30rem; }
+    .iframe-panel { height: 100%; min-height: 100%; }
+    .content-grid { display: grid; flex: 1; gap: clamp(0.6rem, 1.2vw, 1rem); grid-template-columns: minmax(0, 1fr); }
+    .support-panel { display: grid; gap: 0.75rem; align-content: start; }
+    @media (min-width: 768px) and (max-width: 1179px) { .support-panel { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 1180px) { .content-grid { grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); } }
+    @media (min-width: 1536px) { .frame-wrap { height: clamp(36rem, calc(100dvh - 18rem), 64rem); } }
+    .shimmer { background: linear-gradient(90deg, #f2f4f7 25%, #e4e7ec 37%, #f2f4f7 63%); background-size: 400% 100%; animation: shimmer 1.5s ease infinite; }
+    @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+    body.theme-night { background: #080D0A; color: #39FF14; }
+    body.theme-night.mesh-bg { background: #080D0A; }
+    body.theme-night .app-shell,
+    body.theme-night .content-grid > section,
+    body.theme-night .support-panel > div,
+    body.theme-night .selector-grid,
+    body.theme-night #loadingLayer,
+    body.theme-night #fallbackPanel .rounded-3xl,
+    body.theme-night #fallbackPanel .rounded-2xl,
+    body.theme-night .settings-panel {
+      background: rgba(8, 13, 10, 0.94) !important;
+      border-color: #145A22 !important;
+      box-shadow: none !important;
+    }
+    body.theme-night .app-shell *,
+    body.theme-night .content-grid > section *,
+    body.theme-night .support-panel > div *,
+    body.theme-night .settings-panel *,
+    body.theme-night .settings-button * {
+      color: #39FF14 !important;
+    }
+    body.theme-night .topbar-badge,
+    body.theme-night .settings-select,
+    body.theme-night .theme-toggle,
+    body.theme-night .active-tab,
+    body.theme-night .inactive-tab,
+    body.theme-night #sideOpenLink,
+    body.theme-night #fallbackLink,
+    body.theme-night #modePill {
+      background: #145A22 !important;
+      border-color: #39FF14 !important;
+      color: #39FF14 !important;
+      box-shadow: none !important;
+    }
+    body.theme-night .selector-icon-badge {
+      background: #080D0A !important;
+      box-shadow: none !important;
+    }
+    body.theme-night .settings-button {
+      background: transparent !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      color: #39FF14 !important;
+    }
+    body.theme-night .selector-btn[aria-selected="true"] {
+      box-shadow: 0 0 0 2px #39FF14 !important;
+    }
+    body.theme-night .frame-wrap,
+    body.theme-night .iframe-panel,
+    body.theme-night #fallbackPanel {
+      background: #080D0A !important;
+    }
+    body.theme-night .settings-label,
+    body.theme-night .text-muted,
+    body.theme-night .text-slate-500,
+    body.theme-night .text-slate-600,
+    body.theme-night .text-slate-900,
+    body.theme-night .text-slate-950,
+    body.theme-night .text-ocean,
+    body.theme-night .text-emerald-700,
+    body.theme-night .text-amber-700 {
+      color: #39FF14 !important;
+    }
+
+    @media (max-width: 767px) {
+      .page-main { padding: 0.25rem; }
+      .app-shell { min-height: calc(100dvh - 0.5rem); border-radius: 1.25rem; }
+      .frame-wrap { height: clamp(27rem, 67dvh, 42rem); min-height: 27rem; }
+      .support-panel { gap: 0.65rem; }
+      .topbar { align-items: flex-start; flex-wrap: wrap; }
+      .topbar-actions { width: 100%; justify-content: flex-end; }
+      .selector-grid { grid-template-columns: 1fr; }
+      .settings-button-label { display: none; }
+    }
+  </style>
+<script type="module">
+
+          !function(e,t){if("object"==typeof exports&&"object"==typeof module)module.exports=t();else if("function"==typeof define&&define.amd)define([],t);else{var r=t();for(var o in r)("object"==typeof exports?exports:e)[o]=r[o]}}(globalThis,()=>(()=>{"use strict";let e,t,r=`*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style:  ;
+}
+
+/*
+! tailwindcss v3.4.18 | MIT License | https://tailwindcss.com
+*/
+
+/*
+1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)
+2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
+*/
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  /* 1 */
+  border-width: 0;
+  /* 2 */
+  border-style: solid;
+  /* 2 */
+  border-color: #e5e7eb;
+  /* 2 */
+}
+
+::before,
+::after {
+  --tw-content: '';
+}
+
+/*
+1. Use a consistent sensible line-height in all browsers.
+2. Prevent adjustments of font size after orientation changes in iOS.
+3. Use a more readable tab size.
+4. Use the user's configured \`sans\` font-family by default.
+5. Use the user's configured \`sans\` font-feature-settings by default.
+6. Use the user's configured \`sans\` font-variation-settings by default.
+7. Disable tap highlights on iOS
+*/
+
+html,
+:host {
+  line-height: 1.5;
+  /* 1 */
+  -webkit-text-size-adjust: 100%;
+  /* 2 */
+  -moz-tab-size: 4;
+  /* 3 */
+  -o-tab-size: 4;
+     tab-size: 4;
+  /* 3 */
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* 4 */
+  font-feature-settings: normal;
+  /* 5 */
+  font-variation-settings: normal;
+  /* 6 */
+  -webkit-tap-highlight-color: transparent;
+  /* 7 */
+}
+
+/*
+1. Remove the margin in all browsers.
+2. Inherit line-height from \`html\` so users can set them as a class directly on the \`html\` element.
+*/
+
+body {
+  margin: 0;
+  /* 1 */
+  line-height: inherit;
+  /* 2 */
+}
+
+/*
+1. Add the correct height in Firefox.
+2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
+3. Ensure horizontal rules are visible by default.
+*/
+
+hr {
+  height: 0;
+  /* 1 */
+  color: inherit;
+  /* 2 */
+  border-top-width: 1px;
+  /* 3 */
+}
+
+/*
+Add the correct text decoration in Chrome, Edge, and Safari.
+*/
+
+abbr:where([title]) {
+  -webkit-text-decoration: underline dotted;
+          text-decoration: underline dotted;
+}
+
+/*
+Remove the default font size and weight for headings.
+*/
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/*
+Reset links to optimize for opt-in styling instead of opt-out.
+*/
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/*
+Add the correct font weight in Edge and Safari.
+*/
+
+b,
+strong {
+  font-weight: bolder;
+}
+
+/*
+1. Use the user's configured \`mono\` font-family by default.
+2. Use the user's configured \`mono\` font-feature-settings by default.
+3. Use the user's configured \`mono\` font-variation-settings by default.
+4. Correct the odd \`em\` font sizing in all browsers.
+*/
+
+code,
+kbd,
+samp,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* 1 */
+  font-feature-settings: normal;
+  /* 2 */
+  font-variation-settings: normal;
+  /* 3 */
+  font-size: 1em;
+  /* 4 */
+}
+
+/*
+Add the correct font size in all browsers.
+*/
+
+small {
+  font-size: 80%;
+}
+
+/*
+Prevent \`sub\` and \`sup\` elements from affecting the line height in all browsers.
+*/
+
+sub,
+sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+sup {
+  top: -0.5em;
+}
+
+/*
+1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)
+2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)
+3. Remove gaps between table borders by default.
+*/
+
+table {
+  text-indent: 0;
+  /* 1 */
+  border-color: inherit;
+  /* 2 */
+  border-collapse: collapse;
+  /* 3 */
+}
+
+/*
+1. Change the font styles in all browsers.
+2. Remove the margin in Firefox and Safari.
+3. Remove default padding in all browsers.
+*/
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+  /* 1 */
+  font-feature-settings: inherit;
+  /* 1 */
+  font-variation-settings: inherit;
+  /* 1 */
+  font-size: 100%;
+  /* 1 */
+  font-weight: inherit;
+  /* 1 */
+  line-height: inherit;
+  /* 1 */
+  letter-spacing: inherit;
+  /* 1 */
+  color: inherit;
+  /* 1 */
+  margin: 0;
+  /* 2 */
+  padding: 0;
+  /* 3 */
+}
+
+/*
+Remove the inheritance of text transform in Edge and Firefox.
+*/
+
+button,
+select {
+  text-transform: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Remove default button styles.
+*/
+
+button {
+  -webkit-appearance: button;
+  /* 1 */
+  background-color: transparent;
+  /* 2 */
+  background-image: none;
+  /* 2 */
+}
+
+/*
+Use the modern Firefox focus style for all focusable elements.
+*/
+
+:-moz-focusring {
+  outline: auto;
+}
+
+/*
+Remove the additional \`:invalid\` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)
+*/
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}
+
+/*
+Add the correct vertical alignment in Chrome and Firefox.
+*/
+
+progress {
+  vertical-align: baseline;
+}
+
+/*
+Correct the cursor style of increment and decrement buttons in Safari.
+*/
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+/*
+1. Correct the odd appearance in Chrome and Safari.
+2. Correct the outline style in Safari.
+*/
+
+[type='search'] {
+  -webkit-appearance: textfield;
+  /* 1 */
+  outline-offset: -2px;
+  /* 2 */
+}
+
+/*
+Remove the inner padding in Chrome and Safari on macOS.
+*/
+
+::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+/*
+1. Correct the inability to style clickable types in iOS and Safari.
+2. Change font properties to \`inherit\` in Safari.
+*/
+
+::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  /* 1 */
+  font: inherit;
+  /* 2 */
+}
+
+/*
+Add the correct display in Chrome and Safari.
+*/
+
+summary {
+  display: list-item;
+}
+
+/*
+Removes the default spacing and border for appropriate elements.
+*/
+
+blockquote,
+dl,
+dd,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+hr,
+figure,
+p,
+pre {
+  margin: 0;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+}
+
+legend {
+  padding: 0;
+}
+
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+Reset default styling for dialogs.
+*/
+
+dialog {
+  padding: 0;
+}
+
+/*
+Prevent resizing textareas horizontally by default.
+*/
+
+textarea {
+  resize: vertical;
+}
+
+
+/*
+Set the default cursor for buttons.
+*/
+
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
+/*
+Make sure disabled buttons don't get the pointer cursor.
+*/
+
+:disabled {
+  cursor: default;
+}
+
+/*
+1. Make replaced elements \`display: block\` by default. (https://github.com/mozdevs/cssremedy/issues/14)
+2. Add \`vertical-align: middle\` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)
+   This can trigger a poorly considered lint error in some tools but is included by design.
+*/
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  /* 1 */
+  vertical-align: middle;
+  /* 2 */
+}
+
+/*
+Constrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)
+*/
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make elements with the HTML hidden attribute stay hidden by default */
+
+[hidden]:where(:not([hidden="until-found"])) {
+  display: none;
+}
+
+::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+::-webkit-date-and-time-value {
+  min-height: 1.5em;
+}
+
+::-webkit-datetime-edit,::-webkit-datetime-edit-year-field,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute-field,::-webkit-datetime-edit-second-field,::-webkit-datetime-edit-millisecond-field,::-webkit-datetime-edit-meridiem-field {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+}
+
+[multiple],[size]:where(select:not([size="1"])) {
+  background-image: initial;
+  background-position: initial;
+  background-repeat: unset;
+  background-size: initial;
+  padding-right: 0.75rem;
+  -webkit-print-color-adjust: unset;
+          print-color-adjust: unset;
+}
+
+[type='checkbox'],[type='radio'] {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  padding: 0;
+  -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+  display: inline-block;
+  vertical-align: middle;
+  background-origin: border-box;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+          user-select: none;
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+  color: #2563eb;
+  background-color: #fff;
+  border-color: #6b7280;
+  border-width: 1px;
+  --tw-shadow: 0 0 #0000;
+}
+
+[type='checkbox'] {
+  border-radius: 0px;
+}
+
+[type='radio'] {
+  border-radius: 100%;
+}
+
+[type='checkbox']:focus,[type='radio']:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  --tw-ring-inset: var(--tw-empty,/*!*/ /*!*/);
+  --tw-ring-offset-width: 2px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: #2563eb;
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+[type='checkbox']:checked,[type='radio']:checked {
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+[type='checkbox']:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+}
+
+[type='radio']:checked {
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+}
+
+[type='checkbox']:checked:hover,[type='checkbox']:checked:focus,[type='radio']:checked:hover,[type='radio']:checked:focus {
+  border-color: transparent;
+  background-color: currentColor;
+}
+
+[type='checkbox']:indeterminate {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3e%3cpath stroke='white' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 8h8'/%3e%3c/svg%3e");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+[type='checkbox']:indeterminate:hover,[type='checkbox']:indeterminate:focus {
+  border-color: transparent;
+  background-color: currentColor;
+}
+
+[type='file'] {
+  background: unset;
+  border-color: inherit;
+  border-width: 0;
+  border-radius: 0;
+  padding: 0;
+  font-size: unset;
+  line-height: inherit;
+}
+
+[type='file']:focus {
+  outline: 1px solid ButtonText;
+  outline: 1px auto -webkit-focus-ring-color;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.pointer-events-none {
+  pointer-events: none;
+}
+
+.pointer-events-auto {
+  pointer-events: auto;
+}
+
+.visible {
+  visibility: visible;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.collapse {
+  visibility: collapse;
+}
+
+.fixed {
+  position: fixed;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.relative {
+  position: relative;
+}
+
+.-bottom-7 {
+  bottom: -1.75rem;
+}
+
+.-left-1 {
+  left: -0.25rem;
+}
+
+.-left-2 {
+  left: -0.5rem;
+}
+
+.-left-4 {
+  left: -1rem;
+}
+
+.-right-2 {
+  right: -0.5rem;
+}
+
+.-top-1 {
+  top: -0.25rem;
+}
+
+.-top-2 {
+  top: -0.5rem;
+}
+
+.-top-4 {
+  top: -1rem;
+}
+
+.-top-7 {
+  top: -1.75rem;
+}
+
+.bottom-3 {
+  bottom: 0.75rem;
+}
+
+.left-0 {
+  left: 0px;
+}
+
+.left-1 {
+  left: 0.25rem;
+}
+
+.left-1\\/2 {
+  left: 50%;
+}
+
+.left-3 {
+  left: 0.75rem;
+}
+
+.top-0 {
+  top: 0px;
+}
+
+.top-1 {
+  top: 0.25rem;
+}
+
+.top-1\\/2 {
+  top: 50%;
+}
+
+.z-10 {
+  z-index: 10;
+}
+
+.m-1 {
+  margin: 0.25rem;
+}
+
+.m-2 {
+  margin: 0.5rem;
+}
+
+.m-4 {
+  margin: 1rem;
+}
+
+.-mx-4 {
+  margin-left: -1rem;
+  margin-right: -1rem;
+}
+
+.my-2 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.ml-3 {
+  margin-left: 0.75rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 0.75rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.block {
+  display: block;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.inline {
+  display: inline;
+}
+
+.flex {
+  display: flex;
+}
+
+.inline-flex {
+  display: inline-flex;
+}
+
+.table {
+  display: table;
+}
+
+.contents {
+  display: contents;
+}
+
+.hidden {
+  display: none;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
+.h-6 {
+  height: 1.5rem;
+}
+
+.h-screen {
+  height: 100vh;
+}
+
+.max-h-full {
+  max-height: 100%;
+}
+
+.w-11 {
+  width: 2.75rem;
+}
+
+.w-4 {
+  width: 1rem;
+}
+
+.w-6 {
+  width: 1.5rem;
+}
+
+.w-60 {
+  width: 15rem;
+}
+
+.w-80 {
+  width: 20rem;
+}
+
+.w-96 {
+  width: 24rem;
+}
+
+.w-\\[560px\\] {
+  width: 560px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.w-screen {
+  width: 100vw;
+}
+
+.max-w-2xl {
+  max-width: 42rem;
+}
+
+.max-w-full {
+  max-width: 100%;
+}
+
+.max-w-md {
+  max-width: 28rem;
+}
+
+.max-w-xl {
+  max-width: 36rem;
+}
+
+.flex-shrink {
+  flex-shrink: 1;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.grow {
+  flex-grow: 1;
+}
+
+.border-collapse {
+  border-collapse: collapse;
+}
+
+.-translate-x-1 {
+  --tw-translate-x: -0.25rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-x-1\\/2 {
+  --tw-translate-x: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-x-full {
+  --tw-translate-x: -100%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-y-1 {
+  --tw-translate-y: -0.25rem;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-y-1\\/2 {
+  --tw-translate-y: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.translate-x-full {
+  --tw-translate-x: 100%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.transform {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.cursor-auto {
+  cursor: auto;
+}
+
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.resize {
+  resize: both;
+}
+
+.list-disc {
+  list-style-type: disc;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.self-stretch {
+  align-self: stretch;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
+.text-ellipsis {
+  text-overflow: ellipsis;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
+.break-words {
+  overflow-wrap: break-word;
+}
+
+.break-all {
+  word-break: break-all;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded-md {
+  border-radius: 0.375rem;
+}
+
+.rounded-sm {
+  border-radius: 0.125rem;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.border {
+  border-width: 1px;
+}
+
+.border-2 {
+  border-width: 2px;
+}
+
+.border-solid {
+  border-style: solid;
+}
+
+.border-blue-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
+}
+
+.border-gray-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
+}
+
+.border-gray-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
+}
+
+.border-gray-600 {
+  --tw-border-opacity: 1;
+  border-color: rgb(75 85 99 / var(--tw-border-opacity, 1));
+}
+
+.border-green-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(34 197 94 / var(--tw-border-opacity, 1));
+}
+
+.border-purple-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(168 85 247 / var(--tw-border-opacity, 1));
+}
+
+.border-red-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(239 68 68 / var(--tw-border-opacity, 1));
+}
+
+.border-sky-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(14 165 233 / var(--tw-border-opacity, 1));
+}
+
+.border-slate-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(226 232 240 / var(--tw-border-opacity, 1));
+}
+
+.border-slate-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(203 213 225 / var(--tw-border-opacity, 1));
+}
+
+.bg-black {
+  --tw-bg-opacity: 1;
+  background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1));
+}
+
+.bg-black\\/60 {
+  background-color: rgb(0 0 0 / 0.6);
+}
+
+.bg-black\\/70 {
+  background-color: rgb(0 0 0 / 0.7);
+}
+
+.bg-blue-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+}
+
+.bg-blue-500\\/30 {
+  background-color: rgb(59 130 246 / 0.3);
+}
+
+.bg-blue-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(37 99 235 / var(--tw-bg-opacity, 1));
+}
+
+.bg-gray-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+
+.bg-gray-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+
+.bg-gray-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
+}
+
+.bg-gray-700 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(55 65 81 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(220 252 231 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(240 253 244 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(34 197 94 / var(--tw-bg-opacity, 1));
+}
+
+.bg-green-500\\/30 {
+  background-color: rgb(34 197 94 / 0.3);
+}
+
+.bg-orange-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+}
+
+.bg-orange-500\\/30 {
+  background-color: rgb(249 115 22 / 0.3);
+}
+
+.bg-purple-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(168 85 247 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+
+.bg-red-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+}
+
+.bg-slate-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
+}
+
+.bg-slate-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(203 213 225 / var(--tw-bg-opacity, 1));
+}
+
+.bg-slate-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
+}
+
+.bg-slate-900 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(15 23 42 / var(--tw-bg-opacity, 1));
+}
+
+.bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+
+.bg-yellow-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+
+.p-0 {
+  padding: 0px;
+}
+
+.p-1 {
+  padding: 0.25rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.p-3 {
+  padding: 0.75rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.p-6 {
+  padding: 1.5rem;
+}
+
+.p-8 {
+  padding: 2rem;
+}
+
+.px-0 {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.px-3 {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.py-0 {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.py-0\\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.py-4 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.pb-0 {
+  padding-bottom: 0px;
+}
+
+.pb-0\\.5 {
+  padding-bottom: 0.125rem;
+}
+
+.pb-1 {
+  padding-bottom: 0.25rem;
+}
+
+.pl-2 {
+  padding-left: 0.5rem;
+}
+
+.pl-4 {
+  padding-left: 1rem;
+}
+
+.pr-2 {
+  padding-right: 0.5rem;
+}
+
+.pt-2 {
+  padding-top: 0.5rem;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.lowercase {
+  text-transform: lowercase;
+}
+
+.text-black {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
+}
+
+.text-blue-500 {
+  --tw-text-opacity: 1;
+  color: rgb(59 130 246 / var(--tw-text-opacity, 1));
+}
+
+.text-blue-600 {
+  --tw-text-opacity: 1;
+  color: rgb(37 99 235 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-300 {
+  --tw-text-opacity: 1;
+  color: rgb(209 213 219 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-400 {
+  --tw-text-opacity: 1;
+  color: rgb(156 163 175 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-500 {
+  --tw-text-opacity: 1;
+  color: rgb(107 114 128 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-600 {
+  --tw-text-opacity: 1;
+  color: rgb(75 85 99 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-700 {
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity, 1));
+}
+
+.text-gray-900 {
+  --tw-text-opacity: 1;
+  color: rgb(17 24 39 / var(--tw-text-opacity, 1));
+}
+
+.text-green-500 {
+  --tw-text-opacity: 1;
+  color: rgb(34 197 94 / var(--tw-text-opacity, 1));
+}
+
+.text-green-600 {
+  --tw-text-opacity: 1;
+  color: rgb(22 163 74 / var(--tw-text-opacity, 1));
+}
+
+.text-green-700 {
+  --tw-text-opacity: 1;
+  color: rgb(21 128 61 / var(--tw-text-opacity, 1));
+}
+
+.text-green-800 {
+  --tw-text-opacity: 1;
+  color: rgb(22 101 52 / var(--tw-text-opacity, 1));
+}
+
+.text-indigo-600 {
+  --tw-text-opacity: 1;
+  color: rgb(79 70 229 / var(--tw-text-opacity, 1));
+}
+
+.text-orange-500 {
+  --tw-text-opacity: 1;
+  color: rgb(249 115 22 / var(--tw-text-opacity, 1));
+}
+
+.text-purple-500 {
+  --tw-text-opacity: 1;
+  color: rgb(168 85 247 / var(--tw-text-opacity, 1));
+}
+
+.text-red-500 {
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity, 1));
+}
+
+.text-red-600 {
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
+
+.text-red-800 {
+  --tw-text-opacity: 1;
+  color: rgb(153 27 27 / var(--tw-text-opacity, 1));
+}
+
+.text-sky-500 {
+  --tw-text-opacity: 1;
+  color: rgb(14 165 233 / var(--tw-text-opacity, 1));
+}
+
+.text-sky-700 {
+  --tw-text-opacity: 1;
+  color: rgb(3 105 161 / var(--tw-text-opacity, 1));
+}
+
+.text-slate-400 {
+  --tw-text-opacity: 1;
+  color: rgb(148 163 184 / var(--tw-text-opacity, 1));
+}
+
+.text-slate-500 {
+  --tw-text-opacity: 1;
+  color: rgb(100 116 139 / var(--tw-text-opacity, 1));
+}
+
+.text-slate-700 {
+  --tw-text-opacity: 1;
+  color: rgb(51 65 85 / var(--tw-text-opacity, 1));
+}
+
+.text-slate-800 {
+  --tw-text-opacity: 1;
+  color: rgb(30 41 59 / var(--tw-text-opacity, 1));
+}
+
+.text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+
+.underline {
+  text-decoration-line: underline;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.opacity-100 {
+  opacity: 1;
+}
+
+.shadow {
+  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-lg {
+  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-sm {
+  --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.shadow-xl {
+  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.outline-none {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.outline {
+  outline-style: solid;
+}
+
+.ring-4 {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.ring-blue-300 {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(147 197 253 / var(--tw-ring-opacity, 1));
+}
+
+.ring-blue-800 {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(30 64 175 / var(--tw-ring-opacity, 1));
+}
+
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.transition {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.hover\\:border-slate-400:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(148 163 184 / var(--tw-border-opacity, 1));
+}
+
+.hover\\:bg-blue-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(29 78 216 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-gray-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-gray-200:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-green-700:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(21 128 61 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-purple-600:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(147 51 234 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-red-200:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 202 202 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-sky-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(224 242 254 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-slate-100:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(241 245 249 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-slate-300:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(203 213 225 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-slate-50:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(248 250 252 / var(--tw-bg-opacity, 1));
+}
+
+.hover\\:bg-white\\/30:hover {
+  background-color: rgb(255 255 255 / 0.3);
+}
+
+.hover\\:text-gray-100:hover {
+  --tw-text-opacity: 1;
+  color: rgb(243 244 246 / var(--tw-text-opacity, 1));
+}
+
+.hover\\:text-sky-900:hover {
+  --tw-text-opacity: 1;
+  color: rgb(12 74 110 / var(--tw-text-opacity, 1));
+}
+
+.hover\\:text-slate-600:hover {
+  --tw-text-opacity: 1;
+  color: rgb(71 85 105 / var(--tw-text-opacity, 1));
+}
+
+.hover\\:text-slate-800:hover {
+  --tw-text-opacity: 1;
+  color: rgb(30 41 59 / var(--tw-text-opacity, 1));
+}
+
+.hover\\:underline:hover {
+  text-decoration-line: underline;
+}
+
+.focus\\:border-indigo-500:focus {
+  --tw-border-opacity: 1;
+  border-color: rgb(99 102 241 / var(--tw-border-opacity, 1));
+}
+
+.focus\\:ring-indigo-200:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(199 210 254 / var(--tw-ring-opacity, 1));
+}
+
+.focus\\:ring-indigo-500:focus {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(99 102 241 / var(--tw-ring-opacity, 1));
+}
+
+.active\\:bg-red-100:active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 226 226 / var(--tw-bg-opacity, 1));
+}
+
+.active\\:bg-slate-200:active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity, 1));
+}
+
+.group\\/tooltip:hover .group-hover\\/tooltip\\:visible {
+  visibility: visible;
+}
+
+.group\\/tooltip:hover .group-hover\\/tooltip\\:opacity-100 {
+  opacity: 1;
+}
+
+@media (min-width: 640px) {
+  .sm\\:text-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}`;
+</script>
+</head>
+<body class="mesh-bg min-h-screen text-ink">
+  <main class="page-main">
+    <section class="app-shell overflow-hidden rounded-3xl border border-white/70 bg-white/75 shadow-soft backdrop-blur-xl">
+      <div class="border-b border-slate-200/80 px-4 py-3 sm:px-5 lg:px-6">
+        <div class="topbar">
+          <h1 id="appTitle" class="topbar-title text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">PPS Integrity Hub</h1>
+          <div class="topbar-actions">
+            <div class="topbar-badge inline-flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-ocean">
+              <span class="h-2 w-2 rounded-full bg-emerald"></span>
+              <span id="appBadgeText">Product &amp; Process Solutions</span>
+            </div>
+            <div class="settings-wrap">
+              <button id="settingsButton" type="button" class="settings-button" aria-label="Settings" title="Settings" aria-haspopup="true" aria-expanded="false">
+                <svg class="settings-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.08a1.65 1.65 0 0 0 .92-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.08a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.08a1.65 1.65 0 0 0 1.51.92H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span id="settingsButtonText" class="settings-button-label">Settings</span>
+              </button>
+              <div id="settingsPanel" class="settings-panel hidden">
+                <div class="settings-stack">
+                  <div class="settings-row">
+                    <label id="languageLabel" class="settings-label" for="languageSelect">Language</label>
+                    <select id="languageSelect" class="settings-select">
+                      <option id="languageOptionEn" value="en">English</option>
+                      <option id="languageOptionZh" value="zh">中文</option>
+                    </select>
+                  </div>
+                  <div class="settings-row">
+                    <span id="themeLabel" class="settings-label">Night mode</span>
+                    <button id="themeToggle" type="button" class="theme-toggle" aria-pressed="false">
+                      <span id="themeToggleStatus">Off</span>
+                      <span>◐</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="app-body px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
+        <div class="selector-grid rounded-2xl bg-slate-100/70 p-1" role="tablist" aria-label="Form selector">
+          <button id="tab-platform" class="selector-btn active-tab rounded-lg px-3 py-2 text-left transition hover:-translate-y-0.5" role="tab" aria-selected="true" data-form="platform">
+            <span class="flex items-center gap-3">
+              <span aria-hidden="true" class="selector-icon-badge">PIE</span>
+              <span class="min-w-0">
+                <span id="tabPlatformTitle" class="block text-xs font-bold sm:text-sm">PIE: Platform Issue Escalation</span>
+                <span id="tabPlatformHint" class="mt-0.5 block text-xs opacity-80">Escalate platform or tooling blockers</span>
+              </span>
+            </span>
+          </button>
+          <button id="tab-policy" class="selector-btn inactive-tab rounded-lg px-3 py-2 text-left transition hover:-translate-y-0.5 hover:bg-white" role="tab" aria-selected="false" data-form="policy">
+            <span class="flex items-center gap-3">
+              <span aria-hidden="true" class="selector-icon-badge">PQA</span>
+              <span class="min-w-0">
+                <span id="tabPolicyTitle" class="block text-xs font-bold sm:text-sm">PQA: Policy Query Assistance</span>
+                <span id="tabPolicyHint" class="mt-0.5 block text-xs opacity-80">Request policy clarification or support</span>
+              </span>
+            </span>
+          </button>
+        </div>
+
+        <div class="mt-3 content-grid">
+          <section class="rounded-3xl border border-slate-200 bg-white shadow-panel">
+            <div class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 id="formTitle" class="text-xl font-bold text-slate-950">PIE: Platform Issue Escalation</h2>
+                <p id="formSubtitle" class="mt-1 text-sm text-muted">Platform access, tooling, workflow, or operational blocker intake</p>
+              </div>
+              <div id="modePill" class="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Trying iframe embed</div>
+            </div>
+
+            <div class="relative frame-wrap overflow-hidden rounded-b-3xl bg-slate-50">
+              <div id="loadingLayer" class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white/92 p-8 text-center backdrop-blur-sm">
+                <div class="h-16 w-16 rounded-2xl shimmer"></div>
+                <div>
+                  <div id="loadingTitle" class="text-lg font-bold text-slate-900">Loading the selected form inline…</div>
+                  <p id="loadingBody" class="mt-2 max-w-lg text-sm leading-6 text-muted">If the Lark page refuses iframe embedding, this switcher will keep you here and show the secure fallback panel instead.</p>
+                </div>
+              </div>
+
+              <iframe id="formFrame" title="Selected Lark form" src="" class="iframe-panel h-full w-full border-0 bg-white" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-write; fullscreen" loading="eager"></iframe>
+
+              <div id="fallbackPanel" class="hidden absolute inset-0 z-20 overflow-auto bg-gradient-to-br from-white via-slate-50 to-blue-50 p-6 sm:p-10">
+                <div class="mx-auto flex min-h-full max-w-3xl items-center">
+                  <div class="rounded-3xl border border-amber-200 bg-white p-6 shadow-soft sm:p-8">
+                    <div id="fallbackBadge" class="mb-4 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-700">Embedding restricted</div>
+                    <h3 id="fallbackTitle" class="text-2xl font-extrabold text-slate-950">Lark did not allow this form to render inside the page.</h3>
+                    <p id="fallbackBody" class="mt-3 text-sm leading-7 text-slate-600">This can happen when Lark applies frame protection, cross-origin restrictions, or login/session controls. I also attempted a browser fetch-style check, but cross-origin form content cannot be safely reproduced inside this page without Lark allowing it.</p>
+                    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div id="fallbackSelectedLabel" class="text-sm font-semibold text-slate-900">Selected form</div>
+                      <div id="fallbackName" class="mt-1 text-lg font-bold text-ocean">PIE: Platform Issue Escalation</div>
+                    </div>
+                    <a id="fallbackLink" class="mt-6 inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800" href="#" target="_blank" rel="noopener noreferrer">Open the official Lark form</a>
+                    <p id="fallbackNote" class="mt-4 text-xs leading-5 text-slate-500">The direct link is kept inside this switcher UI as the last-resort fallback requested. Opening it may leave the switcher because Lark blocks embedded rendering.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="support-panel">
+            <div class="flex">
+              <a id="sideOpenLink" class="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50" href="#" target="_blank" rel="noopener noreferrer">Open form in new tab</a>
+            </div>
+            <div class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
+              <h3 id="whenToUseLabel" class="text-base font-bold text-slate-950">When to use</h3>
+              <ul id="useCaseList" class="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
+                <li>To report technical outages, system errors, tool access problems, broken UI, data discrepancies, or other platform issues disrupting your daily operations.</li>
+              </ul>
+            </div>
+            <div class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
+              <h3 id="howToUseLabel" class="text-base font-bold text-slate-950">How to use</h3>
+              <ul id="howToUseList" class="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
+                <li>Sign in with your authorized Lark account.</li>
+                <li>Describe the platform issue and impacted workflow.</li>
+                <li>Attach any supporting links or screenshots that help triage the escalation.</li>
+              </ul>
+            </div>
+            <div class="rounded-3xl border border-blue-100 bg-blue-50/80 p-5 shadow-sm">
+              <h3 id="designedForLabel" class="text-base font-bold text-slate-950">Designed for</h3>
+              <p id="designedForText" class="mt-3 text-sm leading-6 text-slate-600">Authorized BPO/vendor Ops leads, team leads, and quality leads who are responsible for reporting technical blockers and system anomalies on behalf of their site.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const locales = {
+      en: {
+        appTitle: 'PPS Integrity Hub',
+        badge: 'Product & Process Solutions',
+        settings: 'Settings',
+        language: 'Language',
+        english: 'English',
+        chinese: '中文',
+        nightMode: 'Night mode',
+        themeOn: 'On',
+        themeOff: 'Off',
+        currentSelection: 'Current selection',
+        whenToUse: 'When to use',
+        howToUse: 'How to use',
+        designedFor: 'Designed for',
+        openNewTab: 'Open form in new tab',
+        loadingTitle: 'Loading the selected form inline…',
+        loadingBody: 'If the Lark page refuses iframe embedding, this switcher will keep you here and show the secure fallback panel instead.',
+        fallbackBadge: 'Embedding restricted',
+        fallbackTitle: 'Lark did not allow this form to render inside the page.',
+        fallbackBody: 'This can happen when Lark applies frame protection, cross-origin restrictions, or login/session controls. I also attempted a browser fetch-style check, but cross-origin form content cannot be safely reproduced inside this page without Lark allowing it.',
+        fallbackSelectedForm: 'Selected form',
+        openOfficialForm: 'Open the official Lark form',
+        fallbackNote: 'The direct link is kept inside this switcher UI as the last-resort fallback requested. Opening it may leave the switcher because Lark blocks embedded rendering.',
+        modeTrying: 'Trying iframe embed',
+        modeLoaded: 'Iframe loaded',
+        modeFallback: 'Fallback active',
+        statusTrying: 'Testing Lark inline access…',
+        statusLoaded: 'The selected form loaded inline in the switcher.',
+        statusFallback: 'Inline rendering appears blocked; showing same-page fallback.',
+        tabPlatformHint: 'Escalate platform or tooling blockers',
+        tabPolicyHint: 'Request policy clarification or support'
+      },
+      zh: {
+        appTitle: 'PPS 诚信中心',
+        badge: '产品与流程解决方案',
+        settings: '设置',
+        language: '语言',
+        english: 'English',
+        chinese: '中文',
+        nightMode: '夜间模式',
+        themeOn: '开启',
+        themeOff: '关闭',
+        currentSelection: '当前选择',
+        whenToUse: '何时使用',
+        howToUse: '如何使用',
+        designedFor: '适用对象',
+        openNewTab: '在新标签页打开表单',
+        loadingTitle: '正在页内加载所选表单…',
+        loadingBody: '如果 Lark 页面拒绝 iframe 嵌入，此切换页会保持当前页面不跳转，并显示安全的备用说明。',
+        fallbackBadge: '嵌入受限',
+        fallbackTitle: 'Lark 不允许该表单在当前页面内渲染。',
+        fallbackBody: '这通常与 Lark 的框架保护、跨域限制或登录会话控制有关。我也尝试了浏览器抓取式检查，但在 Lark 未允许的情况下，无法安全地在此页面内复刻跨域表单内容。',
+        fallbackSelectedForm: '所选表单',
+        openOfficialForm: '打开官方 Lark 表单',
+        fallbackNote: '该直达链接保留在当前页面作为最后的备用方式。由于 Lark 的嵌入限制，点击后可能会离开当前切换页。',
+        modeTrying: '正在尝试 iframe 嵌入',
+        modeLoaded: 'iframe 已加载',
+        modeFallback: '已启用备用方案',
+        statusTrying: '正在检测 Lark 页内访问…',
+        statusLoaded: '所选表单已在切换页中加载。',
+        statusFallback: '页内渲染似乎受限，正在显示同页备用方案。',
+        tabPlatformHint: '升级平台或工具阻塞问题',
+        tabPolicyHint: '请求政策澄清或支持'
+      }
+    };
+
+    const forms = {
+      platform: {
+        name: { en: 'PIE: Platform Issue Escalation', zh: 'PIE：平台问题升级' },
+        subtitle: {
+          en: 'Platform access, tooling, workflow, or operational blocker intake',
+          zh: '用于提交平台访问、工具、流程或运营阻塞问题'
+        },
+        audienceText: {
+          en: 'Authorized BPO/vendor Ops leads, team leads, and quality leads who are responsible for reporting technical blockers and system anomalies on behalf of their site.',
+          zh: '适用于代表所属站点上报技术阻塞和系统异常的已授权 BPO/vendor 运营主管、团队主管和质量主管。'
+        },
+        useCaseHtml: {
+          en: '<li>To report technical outages, system errors, tool access problems, broken UI, data discrepancies, or other platform issues disrupting your daily operations.</li>',
+          zh: '<li>用于上报影响日常运营的技术中断、系统错误、工具访问问题、界面异常、数据差异或其他平台问题。</li>'
+        },
+        howToUseHtml: {
+          en: '<li>Sign in with your authorized Lark account.</li><li>Describe the platform issue and impacted workflow.</li><li>Attach any supporting links or screenshots that help triage the escalation.</li>',
+          zh: '<li>请使用已授权的 Lark 账号登录。</li><li>说明平台问题和受影响的流程。</li><li>附上有助于分诊升级的链接或截图。</li>'
+        },
+        tabHint: { en: 'Escalate platform or tooling blockers', zh: '升级平台或工具阻塞问题' },
+        url: 'https://bytedance.sg.larkoffice.com/share/base/form/shrlgKrizLJFQWVhhepgpwBI9yg'
+      },
+      policy: {
+        name: { en: 'PQA: Policy Query Assistance', zh: 'PQA：政策咨询协助' },
+        subtitle: {
+          en: 'Policy clarification or decision support intake',
+          zh: '用于提交政策澄清或决策支持请求'
+        },
+        audienceText: {
+          en: 'Designated Vendor/BPO QA/QC, Quality Leads, and Trainers escalating policy questions on behalf of their site.',
+          zh: '适用于代表所属站点升级政策问题的指定 Vendor/BPO QA/QC、质量主管和培训人员。'
+        },
+        useCaseHtml: {
+          en: '<li>Request official clarification when missing, conflicting, or ambiguous policy guidance prevents accurate case handling.</li>',
+          zh: '<li>当缺失、冲突或模糊的政策指引影响案件准确处理时，请提交官方澄清请求。</li>'
+        },
+        howToUseHtml: {
+          en: '<li>Sign in with your authorized Lark account.</li><li>Enter your site, business line, priority, and affected workflow.</li><li>Include case links and relevant policy references.</li>',
+          zh: '<li>请使用已授权的 Lark 账号登录。</li><li>填写站点、业务线、优先级和受影响流程。</li><li>附上案例链接及相关政策参考。</li>'
+        },
+        tabHint: { en: 'Request policy clarification or support', zh: '请求政策澄清或支持' },
+        url: 'https://bytedance.sg.larkoffice.com/share/base/form/shrlgTR4my4DjhNgeQD6MLcApRb'
+      }
+    };
+
+    const appTitle = document.getElementById('appTitle');
+    const appBadgeText = document.getElementById('appBadgeText');
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsButtonText = document.getElementById('settingsButtonText');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsWrap = document.querySelector('.settings-wrap');
+    const languageLabel = document.getElementById('languageLabel');
+    const languageSelect = document.getElementById('languageSelect');
+    const languageOptionEn = document.getElementById('languageOptionEn');
+    const languageOptionZh = document.getElementById('languageOptionZh');
+    const themeLabel = document.getElementById('themeLabel');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeToggleStatus = document.getElementById('themeToggleStatus');
+    const tabPlatformTitle = document.getElementById('tabPlatformTitle');
+    const tabPlatformHint = document.getElementById('tabPlatformHint');
+    const tabPolicyTitle = document.getElementById('tabPolicyTitle');
+    const tabPolicyHint = document.getElementById('tabPolicyHint');
+    const frame = document.getElementById('formFrame');
+    const loadingLayer = document.getElementById('loadingLayer');
+    const loadingTitle = document.getElementById('loadingTitle');
+    const loadingBody = document.getElementById('loadingBody');
+    const fallbackPanel = document.getElementById('fallbackPanel');
+    const fallbackBadge = document.getElementById('fallbackBadge');
+    const fallbackTitle = document.getElementById('fallbackTitle');
+    const fallbackBody = document.getElementById('fallbackBody');
+    const fallbackSelectedLabel = document.getElementById('fallbackSelectedLabel');
+    const fallbackName = document.getElementById('fallbackName');
+    const fallbackLink = document.getElementById('fallbackLink');
+    const fallbackNote = document.getElementById('fallbackNote');
+    const formTitle = document.getElementById('formTitle');
+    const formSubtitle = document.getElementById('formSubtitle');
+    const modePill = document.getElementById('modePill');
+    const globalStatus = document.getElementById('globalStatus');
+    const whenToUseLabel = document.getElementById('whenToUseLabel');
+    const howToUseLabel = document.getElementById('howToUseLabel');
+    const designedForLabel = document.getElementById('designedForLabel');
+    const designedForText = document.getElementById('designedForText');
+    const howToUseList = document.getElementById('howToUseList');
+    const useCaseList = document.getElementById('useCaseList');
+    const sideOpenLink = document.getElementById('sideOpenLink');
+    const buttons = [...document.querySelectorAll('[data-form]')];
+
+    let activeKey = 'platform';
+    let fallbackTimer;
+    let currentLocale = 'en';
+    let isNightMode = false;
+    let currentFrameState = 'trying';
+
+    function getLocaleText() {
+      return locales[currentLocale] || locales.en;
+    }
+
+    function getFormCopy(key) {
+      const form = forms[key];
+      return {
+        name: form.name[currentLocale] || form.name.en,
+        subtitle: form.subtitle[currentLocale] || form.subtitle.en,
+        audienceText: form.audienceText[currentLocale] || form.audienceText.en,
+        useCaseHtml: form.useCaseHtml[currentLocale] || form.useCaseHtml.en,
+        howToUseHtml: form.howToUseHtml[currentLocale] || form.howToUseHtml.en,
+        tabHint: form.tabHint[currentLocale] || form.tabHint.en,
+        url: form.url
+      };
+    }
+
+    function closeSettingsPanel() {
+      settingsPanel.classList.add('hidden');
+      settingsButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleSettingsPanel() {
+      const shouldOpen = settingsPanel.classList.contains('hidden');
+      settingsPanel.classList.toggle('hidden', !shouldOpen);
+      settingsButton.setAttribute('aria-expanded', String(shouldOpen));
+    }
+
+    function setNightMode(enabled) {
+      isNightMode = enabled;
+      document.body.classList.toggle('theme-night', enabled);
+      themeToggle.setAttribute('aria-pressed', String(enabled));
+      themeToggleStatus.textContent = enabled ? getLocaleText().themeOn : getLocaleText().themeOff;
+      try {
+        localStorage.setItem('pps-theme', enabled ? 'night' : 'light');
+      } catch (error) {
+        console.info('Unable to persist theme preference:', error);
+      }
+    }
+
+    function setTabState(key) {
+      buttons.forEach((button) => {
+        const isActive = button.dataset.form === key;
+        button.className = (isActive ? 'selector-btn active-tab' : 'selector-btn inactive-tab') + ' rounded-lg px-3 py-2 text-left transition hover:-translate-y-0.5' + (isActive ? '' : ' hover:bg-white');
+        button.setAttribute('aria-selected', String(isActive));
+      });
+    }
+
+    function updateStatusText() {
+      const text = getLocaleText();
+      if (currentFrameState === 'loaded') {
+        modePill.textContent = text.modeLoaded;
+        modePill.className = 'w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700';
+        if (globalStatus) globalStatus.textContent = text.statusLoaded;
+        return;
+      }
+      if (currentFrameState === 'fallback') {
+        modePill.textContent = text.modeFallback;
+        modePill.className = 'w-fit rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700';
+        if (globalStatus) globalStatus.textContent = text.statusFallback;
+        return;
+      }
+      modePill.textContent = text.modeTrying;
+      modePill.className = 'w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700';
+      if (globalStatus) globalStatus.textContent = text.statusTrying;
+    }
+
+    function updateFormText() {
+      const copy = getFormCopy(activeKey);
+      formTitle.textContent = copy.name;
+      formSubtitle.textContent = copy.subtitle;
+      fallbackName.textContent = copy.name;
+      if (designedForText) designedForText.textContent = copy.audienceText;
+      if (howToUseList) howToUseList.innerHTML = copy.howToUseHtml;
+      if (useCaseList) useCaseList.innerHTML = copy.useCaseHtml;
+      if (sideOpenLink) sideOpenLink.href = copy.url;
+      fallbackLink.href = copy.url;
+    }
+
+    function applyTranslations() {
+      const text = getLocaleText();
+      document.documentElement.lang = currentLocale === 'zh' ? 'zh-CN' : 'en';
+      appTitle.textContent = text.appTitle;
+      appBadgeText.textContent = text.badge;
+      settingsButtonText.textContent = text.settings;
+      settingsButton.setAttribute('aria-label', text.settings);
+      settingsButton.setAttribute('title', text.settings);
+      languageLabel.textContent = text.language;
+      languageOptionEn.textContent = text.english;
+      languageOptionZh.textContent = text.chinese;
+      themeLabel.textContent = text.nightMode;
+      themeToggleStatus.textContent = isNightMode ? text.themeOn : text.themeOff;
+      whenToUseLabel.textContent = text.whenToUse;
+      howToUseLabel.textContent = text.howToUse;
+      designedForLabel.textContent = text.designedFor;
+      sideOpenLink.textContent = text.openNewTab;
+      loadingTitle.textContent = text.loadingTitle;
+      loadingBody.textContent = text.loadingBody;
+      fallbackBadge.textContent = text.fallbackBadge;
+      fallbackTitle.textContent = text.fallbackTitle;
+      fallbackBody.textContent = text.fallbackBody;
+      fallbackSelectedLabel.textContent = text.fallbackSelectedForm;
+      fallbackLink.textContent = text.openOfficialForm;
+      fallbackNote.textContent = text.fallbackNote;
+      tabPlatformTitle.textContent = forms.platform.name[currentLocale] || forms.platform.name.en;
+      tabPlatformHint.textContent = forms.platform.tabHint[currentLocale] || forms.platform.tabHint.en;
+      tabPolicyTitle.textContent = forms.policy.name[currentLocale] || forms.policy.name.en;
+      tabPolicyHint.textContent = forms.policy.tabHint[currentLocale] || forms.policy.tabHint.en;
+      updateFormText();
+      updateStatusText();
+    }
+
+    async function attemptFetchProbe(url) {
+      try {
+        await fetch(url, { mode: 'cors', credentials: 'include' });
+        return 'fetch-accessible';
+      } catch (error) {
+        console.info('Direct fetch/proxy-style content probe blocked by CORS or Lark controls:', error);
+        return 'fetch-blocked';
+      }
+    }
+
+    function showFallback(form) {
+      fallbackLink.href = form.url;
+      fallbackPanel.classList.remove('hidden');
+      loadingLayer.classList.add('hidden');
+      currentFrameState = 'fallback';
+      updateFormText();
+      updateStatusText();
+    }
+
+    async function loadForm(key) {
+      activeKey = key;
+      const form = forms[key];
+      setTabState(key);
+      clearTimeout(fallbackTimer);
+      fallbackPanel.classList.add('hidden');
+      loadingLayer.classList.remove('hidden');
+      currentFrameState = 'trying';
+      updateFormText();
+      updateStatusText();
+
+      frame.src = 'about:blank';
+      await attemptFetchProbe(form.url);
+      setTimeout(() => { frame.src = form.url; }, 80);
+
+      fallbackTimer = setTimeout(() => {
+        if (activeKey === key && !loadingLayer.classList.contains('hidden')) {
+          showFallback(form);
+        }
+      }, 6500);
+    }
+
+    frame.addEventListener('load', () => {
+      if (!frame.src || frame.src === 'about:blank') return;
+      clearTimeout(fallbackTimer);
+      loadingLayer.classList.add('hidden');
+      fallbackPanel.classList.add('hidden');
+      currentFrameState = 'loaded';
+      updateStatusText();
+    });
+
+    frame.addEventListener('error', () => showFallback(forms[activeKey]));
+    buttons.forEach((button) => button.addEventListener('click', () => loadForm(button.dataset.form)));
+
+    settingsButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleSettingsPanel();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!settingsWrap.contains(event.target)) {
+        closeSettingsPanel();
+      }
+    });
+
+    languageSelect.addEventListener('change', (event) => {
+      currentLocale = event.target.value;
+      try {
+        localStorage.setItem('pps-locale', currentLocale);
+      } catch (error) {
+        console.info('Unable to persist language preference:', error);
+      }
+      applyTranslations();
+    });
+
+    themeToggle.addEventListener('click', () => {
+      setNightMode(!isNightMode);
+      applyTranslations();
+    });
+
+    try {
+      const savedLocale = localStorage.getItem('pps-locale');
+      if (savedLocale && locales[savedLocale]) currentLocale = savedLocale;
+      const savedTheme = localStorage.getItem('pps-theme');
+      isNightMode = savedTheme === 'night';
+    } catch (error) {
+      console.info('Unable to restore preferences:', error);
+    }
+
+    languageSelect.value = currentLocale;
+    setNightMode(isNightMode);
+    applyTranslations();
+    closeSettingsPanel();
+
+    window.addEventListener('load', () => {
+      setTimeout(() => loadForm(activeKey), 300);
+    });
+  </script>
+
+
+</body></html>
