@@ -137,6 +137,20 @@
     @media (min-width: 1536px) { .frame-wrap { height: clamp(36rem, calc(100dvh - 18rem), 64rem); } }
     .shimmer { background: linear-gradient(90deg, #f2f4f7 25%, #e4e7ec 37%, #f2f4f7 63%); background-size: 400% 100%; animation: shimmer 1.5s ease infinite; }
     @keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+    .dlo-x-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      box-shadow: 0 12px 26px rgba(220, 38, 38, 0.14);
+    }
+    .dlo-x-icon svg { width: 2rem; height: 2rem; }
+    body.theme-night .dlo-x-icon,
+    body.theme-night .dlo-x-icon * {
+      color: #dc2626 !important;
+    }
 
     body.theme-night { background: #080D0A; color: #39FF14; }
     body.theme-night.mesh-bg { background: #080D0A; }
@@ -2065,6 +2079,15 @@ select {
               </span>
             </span>
           </button>
+          <button id="tab-data-labeling" class="selector-btn inactive-tab rounded-lg px-3 py-2 text-left transition hover:-translate-y-0.5 hover:bg-white" role="tab" aria-selected="false" data-form="dataLabeling">
+            <span class="flex items-center gap-3">
+              <span aria-hidden="true" class="selector-icon-badge">DLO</span>
+              <span class="min-w-0">
+                <span class="block text-xs font-bold sm:text-sm">Data Labeling Operations: Policy Intake</span>
+                <span class="mt-0.5 block text-xs opacity-80">Offline FAQ guidance</span>
+              </span>
+            </span>
+          </button>
         </div>
 
         <div class="mt-3 content-grid">
@@ -2079,7 +2102,7 @@ select {
 
             <div class="relative frame-wrap overflow-hidden rounded-b-3xl bg-slate-50">
               <div id="loadingLayer" class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-white/92 p-8 text-center backdrop-blur-sm">
-                <div class="h-16 w-16 rounded-2xl shimmer"></div>
+                <div id="loadingIcon" class="h-16 w-16 rounded-2xl shimmer"></div>
                 <div>
                   <div id="loadingTitle" class="text-lg font-bold text-slate-900">Loading the selected form inline…</div>
                   <p id="loadingBody" class="mt-2 max-w-lg text-sm leading-6 text-muted">If the Lark page refuses iframe embedding, this switcher will keep you here and show the secure fallback panel instead.</p>
@@ -2107,16 +2130,20 @@ select {
           </section>
 
           <aside class="support-panel">
-            <div class="flex">
+            <div id="sideOpenWrap" class="flex">
               <a id="sideOpenLink" class="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50" href="#" target="_blank" rel="noopener noreferrer">Open form in new tab</a>
             </div>
-            <div class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
+            <div id="dloDisclaimerPanel" class="hidden rounded-3xl border border-red-100 bg-red-50/85 p-5 shadow-sm backdrop-blur">
+              <h3 class="text-base font-bold text-slate-950">No dedicated intake form</h3>
+              <p id="dloDisclaimerText" class="mt-3 text-sm leading-6 text-slate-600">There is currently no dedicated intake form for policy-related questions. Please submit any policy queries through the offline FAQ file maintained for your project/site.</p>
+            </div>
+            <div id="whenToUsePanel" class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
               <h3 id="whenToUseLabel" class="text-base font-bold text-slate-950">When to use</h3>
               <ul id="useCaseList" class="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
                 <li>To report technical outages, system errors, tool access problems, broken UI, data discrepancies, or other platform issues disrupting your daily operations.</li>
               </ul>
             </div>
-            <div class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
+            <div id="howToUsePanel" class="rounded-3xl border border-slate-200 bg-white/85 p-5 shadow-sm backdrop-blur">
               <h3 id="howToUseLabel" class="text-base font-bold text-slate-950">How to use</h3>
               <ul id="howToUseList" class="mt-4 list-disc space-y-2 pl-5 text-sm leading-6 text-slate-600">
                 <li>Sign in with your authorized Lark account.</li>
@@ -2124,7 +2151,7 @@ select {
                 <li>Attach any supporting links or screenshots that help triage the escalation.</li>
               </ul>
             </div>
-            <div class="rounded-3xl border border-blue-100 bg-blue-50/80 p-5 shadow-sm">
+            <div id="designedForPanel" class="rounded-3xl border border-blue-100 bg-blue-50/80 p-5 shadow-sm">
               <h3 id="designedForLabel" class="text-base font-bold text-slate-950">Designed for</h3>
               <p id="designedForText" class="mt-3 text-sm leading-6 text-slate-600">Authorized BPO/vendor Ops leads, team leads, and quality leads who are responsible for reporting technical blockers and system anomalies on behalf of their site.</p>
             </div>
@@ -2162,9 +2189,11 @@ select {
         modeTrying: 'Trying iframe embed',
         modeLoaded: 'Iframe loaded',
         modeFallback: 'Fallback active',
+        modeInfo: 'Offline guidance',
         statusTrying: 'Testing Lark inline access…',
         statusLoaded: 'The selected form loaded inline in the switcher.',
         statusFallback: 'Inline rendering appears blocked; showing same-page fallback.',
+        statusInfo: 'No dedicated form is available for this intake.',
         tabPlatformHint: 'Escalate platform or tooling blockers',
         tabPolicyHint: 'Request policy clarification or support'
       },
@@ -2194,9 +2223,11 @@ select {
         modeTrying: '正在尝试 iframe 嵌入',
         modeLoaded: 'iframe 已加载',
         modeFallback: '已启用备用方案',
+        modeInfo: '离线指引',
         statusTrying: '正在检测 Lark 页内访问…',
         statusLoaded: '所选表单已在切换页中加载。',
         statusFallback: '页内渲染似乎受限，正在显示同页备用方案。',
+        statusInfo: '当前没有专用表单可用于此入口。',
         tabPlatformHint: '升级平台或工具阻塞问题',
         tabPolicyHint: '请求政策澄清或支持'
       }
@@ -2244,6 +2275,32 @@ select {
         },
         tabHint: { en: 'Request policy clarification or support', zh: '请求政策澄清或支持' },
         url: 'https://bytedance.sg.larkoffice.com/share/base/form/shrlgTR4my4DjhNgeQD6MLcApRb'
+      },
+      dataLabeling: {
+        name: { en: 'Data Labeling Operations: Policy Intake', zh: 'Data Labeling Operations：政策入口' },
+        subtitle: {
+          en: 'Offline FAQ guidance for policy-related questions',
+          zh: '政策相关问题的离线 FAQ 指引'
+        },
+        audienceText: {
+          en: 'Data Labeling Operations users who need to raise policy-related questions for their project or site.',
+          zh: '适用于需要为项目或站点提出政策相关问题的数据标注运营用户。'
+        },
+        useCaseHtml: {
+          en: '<li>Use this option when your policy question belongs to Data Labeling Operations.</li>',
+          zh: '<li>当你的政策问题属于 Data Labeling Operations 范围时使用此选项。</li>'
+        },
+        howToUseHtml: {
+          en: '<li>Submit policy queries through the offline FAQ file maintained for your project/site.</li>',
+          zh: '<li>请通过项目/站点维护的离线 FAQ 文件提交政策咨询。</li>'
+        },
+        tabHint: { en: 'Offline FAQ guidance', zh: '离线 FAQ 指引' },
+        infoOnly: true,
+        infoMessage: {
+          en: 'There is currently no dedicated intake form for policy-related questions. Please submit any policy queries through the offline FAQ file maintained for your project/site.',
+          zh: '目前没有用于政策相关问题的专用收集表。请通过项目/站点维护的离线 FAQ 文件提交任何政策咨询。'
+        },
+        url: ''
       }
     };
 
@@ -2266,6 +2323,7 @@ select {
     const tabPolicyHint = document.getElementById('tabPolicyHint');
     const frame = document.getElementById('formFrame');
     const loadingLayer = document.getElementById('loadingLayer');
+    const loadingIcon = document.getElementById('loadingIcon');
     const loadingTitle = document.getElementById('loadingTitle');
     const loadingBody = document.getElementById('loadingBody');
     const fallbackPanel = document.getElementById('fallbackPanel');
@@ -2286,7 +2344,13 @@ select {
     const designedForText = document.getElementById('designedForText');
     const howToUseList = document.getElementById('howToUseList');
     const useCaseList = document.getElementById('useCaseList');
+    const sideOpenWrap = document.getElementById('sideOpenWrap');
     const sideOpenLink = document.getElementById('sideOpenLink');
+    const whenToUsePanel = document.getElementById('whenToUsePanel');
+    const howToUsePanel = document.getElementById('howToUsePanel');
+    const designedForPanel = document.getElementById('designedForPanel');
+    const dloDisclaimerPanel = document.getElementById('dloDisclaimerPanel');
+    const dloDisclaimerText = document.getElementById('dloDisclaimerText');
     const buttons = [...document.querySelectorAll('[data-form]')];
 
     let activeKey = 'platform';
@@ -2308,6 +2372,8 @@ select {
         useCaseHtml: form.useCaseHtml[currentLocale] || form.useCaseHtml.en,
         howToUseHtml: form.howToUseHtml[currentLocale] || form.howToUseHtml.en,
         tabHint: form.tabHint[currentLocale] || form.tabHint.en,
+        infoOnly: Boolean(form.infoOnly),
+        infoMessage: form.infoMessage ? (form.infoMessage[currentLocale] || form.infoMessage.en) : '',
         url: form.url
       };
     }
@@ -2357,20 +2423,62 @@ select {
         if (globalStatus) globalStatus.textContent = text.statusFallback;
         return;
       }
+      if (currentFrameState === 'info') {
+        modePill.textContent = text.modeInfo;
+        modePill.className = 'w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-ocean';
+        if (globalStatus) globalStatus.textContent = text.statusInfo;
+        return;
+      }
       modePill.textContent = text.modeTrying;
       modePill.className = 'w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700';
       if (globalStatus) globalStatus.textContent = text.statusTrying;
     }
 
+    function setLoadingIconState(isInfoOnly) {
+      if (!loadingIcon) return;
+      if (isInfoOnly) {
+        loadingIcon.className = 'h-16 w-16 rounded-2xl dlo-x-icon';
+        loadingIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+        return;
+      }
+      loadingIcon.className = 'h-16 w-16 rounded-2xl shimmer';
+      loadingIcon.innerHTML = '';
+    }
+
+    function setSupportPanelState(isInfoOnly, message) {
+      if (sideOpenWrap) sideOpenWrap.classList.toggle('hidden', isInfoOnly);
+      if (whenToUsePanel) whenToUsePanel.classList.toggle('hidden', isInfoOnly);
+      if (howToUsePanel) howToUsePanel.classList.toggle('hidden', isInfoOnly);
+      if (designedForPanel) designedForPanel.classList.toggle('hidden', isInfoOnly);
+      if (dloDisclaimerPanel) dloDisclaimerPanel.classList.toggle('hidden', !isInfoOnly);
+      if (dloDisclaimerText && message) dloDisclaimerText.textContent = message;
+    }
+
     function updateFormText() {
       const copy = getFormCopy(activeKey);
+      const text = getLocaleText();
       formTitle.textContent = copy.name;
       formSubtitle.textContent = copy.subtitle;
       fallbackName.textContent = copy.name;
       if (designedForText) designedForText.textContent = copy.audienceText;
       if (howToUseList) howToUseList.innerHTML = copy.howToUseHtml;
       if (useCaseList) useCaseList.innerHTML = copy.useCaseHtml;
-      if (sideOpenLink) sideOpenLink.href = copy.url;
+      setLoadingIconState(copy.infoOnly);
+      setSupportPanelState(copy.infoOnly, copy.infoMessage);
+      if (copy.infoOnly) {
+        loadingTitle.textContent = copy.name;
+        loadingBody.textContent = copy.infoMessage;
+        sideOpenLink.removeAttribute('href');
+        sideOpenLink.setAttribute('aria-disabled', 'true');
+        sideOpenLink.textContent = 'No form available';
+        fallbackLink.removeAttribute('href');
+        return;
+      }
+      loadingTitle.textContent = text.loadingTitle;
+      loadingBody.textContent = text.loadingBody;
+      sideOpenLink.setAttribute('href', copy.url);
+      sideOpenLink.removeAttribute('aria-disabled');
+      sideOpenLink.textContent = text.openNewTab;
       fallbackLink.href = copy.url;
     }
 
@@ -2433,6 +2541,15 @@ select {
       clearTimeout(fallbackTimer);
       fallbackPanel.classList.add('hidden');
       loadingLayer.classList.remove('hidden');
+
+      if (form.infoOnly) {
+        frame.src = 'about:blank';
+        currentFrameState = 'info';
+        updateFormText();
+        updateStatusText();
+        return;
+      }
+
       currentFrameState = 'trying';
       updateFormText();
       updateStatusText();
